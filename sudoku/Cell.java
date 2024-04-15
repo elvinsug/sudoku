@@ -1,4 +1,4 @@
-package sudoku;
+
 import java.awt.Color;
 import java.awt.Font;
 import javax.swing.JTextField;
@@ -36,6 +36,7 @@ public class Cell extends JTextField {
       super.setHorizontalAlignment(JTextField.CENTER);
       super.setFont(FONT_NUMBERS);
    }
+
 
    /** Reset this cell for a new game, given the puzzle number and isGiven */
    public void newGame(int number, boolean isGiven) {

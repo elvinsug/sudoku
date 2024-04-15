@@ -1,40 +1,48 @@
-package sudoku;
 import java.awt.*;
 import javax.swing.*;
+
 /**
  * The main Sudoku program
  */
 public class SudokuMain extends JFrame {
-   private static final long serialVersionUID = 1L;  // to prevent serial warning
 
-   // private variables
-   GameBoardPanel board = new GameBoardPanel();
-   JButton btnNewGame = new JButton("New Game");
+  private static final long serialVersionUID = 1L; // to prevent serial warning
 
-   // Constructor
-   public SudokuMain() {
-      Container cp = getContentPane();
-      cp.setLayout(new BorderLayout());
+  // private variables
+  GameBoardPanel board = new GameBoardPanel();
+  JButton btnNewGame = new JButton("New Game");
 
-      cp.add(board, BorderLayout.CENTER);
+  // Constructor
+  public SudokuMain() {
+    Container cp = getContentPane();
+    cp.setLayout(new BorderLayout());
 
-      // Add a button to the south to re-start the game via board.newGame()
-      // ......
+    cp.add(board, BorderLayout.CENTER);
 
-      // Initialize the game board to start the game
-      board.newGame();
+    // Add a button to the south to re-start the game via board.newGame()
+    // ......
 
-      pack();     // Pack the UI components, instead of using setSize()
-      setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);  // to handle window-closing
-      setTitle("Sudoku");
-      setVisible(true);
-   }
+    // Initialize the game board to start the game
+    board.newGame();
 
-   /** The entry main() entry method */
-   public static void main(String[] args) {
-      
-      // [TODO 1] Check "Swing program template" on how to run
-      //  the constructor of "SudokuMain"
-      // .........
-   }
+    pack(); // Pack the UI components, instead of using setSize()
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // to handle window-closing
+    setTitle("Sudoku");
+    setVisible(true);
+  }
+
+  /** The entry main() entry method */
+  public static void main(String[] args) {
+    //  the constructor of "SudokuMain"
+    // Run the GUI construction in the Event-Dispatching thread for thread safety
+    SwingUtilities.invokeLater(
+      new Runnable() {
+        @Override
+        public void run() {
+          new SudokuMain(); // Let the constructor do the job
+        }
+      }
+    );
+    // .........
+  }
 }
