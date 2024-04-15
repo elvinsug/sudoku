@@ -58,5 +58,9 @@ public class Puzzle {
       }
    }
 
+   public int getSolutionAt(Object row, Object col) {
+      return 0;
+   }
+
    //(For advanced students) use singleton design pattern for this class
 }
