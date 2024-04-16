@@ -5,13 +5,15 @@ import javax.swing.*;
 public class GameBoardPanel extends JPanel {
 
   private static final long serialVersionUID = 1L; // to prevent serial warning
-
+  
   // Define named constants for UI sizes
   public static final int CELL_SIZE = 60; // Cell width/height in pixels
   public static final int BOARD_WIDTH = CELL_SIZE * SudokuConstants.GRID_SIZE;
   public static final int BOARD_HEIGHT = CELL_SIZE * SudokuConstants.GRID_SIZE;
   // Board width/height in pixels
 
+  public static int mistake = 0;
+  public static int cellLeft = 2; //hardcoded case
   // Define properties
   /** The game board composes of 9x9 Cells (customized JTextFields) */
   private Cell[][] cells = new Cell[SudokuConstants.GRID_SIZE][SudokuConstants.GRID_SIZE];
@@ -31,15 +33,15 @@ public class GameBoardPanel extends JPanel {
         super.add(cells[row][col]); // JPanel
       }
     }
-
+    puzzle.newPuzzle();
     // [TODO 3] Allocate a common listener as the ActionEvent listener for all the Cells (JTextFields)
     CellInputListener cellInputListener = new CellInputListener();
-
     // [TODO 4] Adds this common listener to all editable cells
     for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
       for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
-        if (!puzzle.isGiven[row][col]) { // Assuming 'isGiven' flags if the cell is editable
+        if (puzzle.isGiven[row][col]==false) { // Assuming 'isGiven' flags if the cell is editable
           cells[row][col].addActionListener(cellInputListener);
+          // System.out.printf("%d %d %B%n",row,col,puzzle.checkIsGiven(row, col));
         }
       }
     }
@@ -53,7 +55,7 @@ public class GameBoardPanel extends JPanel {
    */
   public void newGame() {
     // Generate a new puzzle
-    puzzle.newPuzzle(2);
+    puzzle.newPuzzle();
 
     // Initialize all the 9x9 cells, based on the puzzle.
     for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
@@ -115,17 +117,25 @@ public class GameBoardPanel extends JPanel {
        * and re-paint the cell via sourceCell.paint().
        */
       if (numberIn == sourceCell.number) {
-         sourceCell.status = CellStatus.CORRECT_GUESS;
+        if(sourceCell.status!=CellStatus.CORRECT_GUESS)
+          cellLeft--;
+        sourceCell.status = CellStatus.CORRECT_GUESS;
       } else {
-         sourceCell.status = CellStatus.WRONG_GUESS;
+        sourceCell.status = CellStatus.WRONG_GUESS;
+        mistake++;
+        System.out.println(mistake); //for debugging
       }
+      System.out.printf("cellLeft=%d mistake=%d\n",cellLeft,mistake); //for debugging
       sourceCell.paint();   // re-paint this cell based on its status
-
       /*
        * [TODO 6] (later)
        * Check if the player has solved the puzzle after this move,
        *   by calling isSolved(). Put up a congratulation JOptionPane, if so.
        */
+      if(mistake==10) {
+        JOptionPane.showMessageDialog(null,"You did 10 mistake! You Lost!","Title",JOptionPane.PLAIN_MESSAGE);
+        System.exit(0);
+      }
       if(isSolved()==true) {
          JOptionPane.showMessageDialog(null,"Congratulations!","Title",JOptionPane.PLAIN_MESSAGE);
       }

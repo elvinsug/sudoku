@@ -116,6 +116,7 @@ public class Cell extends JTextField {
       super.setForeground(FG_NOT_GIVEN);
     } else if (status == CellStatus.CORRECT_GUESS) { // from TO_GUESS
       super.setBackground(BG_CORRECT_GUESS);
+      super.setEditable(false);
     } else if (status == CellStatus.WRONG_GUESS) { // from TO_GUESS
       super.setBackground(BG_WRONG_GUESS);
     }

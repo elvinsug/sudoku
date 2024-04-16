@@ -17,7 +17,7 @@ public class Puzzle {
    // Generate a new puzzle given the number of cells to be guessed, which can be used
    //  to control the difficulty level.
    // This method shall set (or update) the arrays numbers and isGiven
-   public void newPuzzle(int cellsToGuess) {
+   public void newPuzzle() {
       // I hardcode a puzzle here for illustration and testing.
       int[][] hardcodedNumbers =
          {{5, 3, 4, 6, 7, 8, 9, 1, 2},
@@ -57,10 +57,5 @@ public class Puzzle {
          }
       }
    }
-
-   public int getSolutionAt(Object row, Object col) {
-      return 0;
-   }
-
    //(For advanced students) use singleton design pattern for this class
 }
