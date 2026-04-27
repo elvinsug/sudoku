@@ -4,27 +4,29 @@ import javax.swing.*;
 
 public class GameBoardPanel extends JPanel {
 
+  public static int mistake = 0;
+  public static int cellLeft = 2;
+
   private static final long serialVersionUID = 1L; // to prevent serial warning
-  
+
   // Define named constants for UI sizes
   public static final int CELL_SIZE = 60; // Cell width/height in pixels
   public static final int BOARD_WIDTH = CELL_SIZE * SudokuConstants.GRID_SIZE;
   public static final int BOARD_HEIGHT = CELL_SIZE * SudokuConstants.GRID_SIZE;
   // Board width/height in pixels
 
-  public static int mistake = 0;
-  public static int cellLeft = 2; //hardcoded case
   // Define properties
   /** The game board composes of 9x9 Cells (customized JTextFields) */
-  private Cell[][] cells = new Cell[SudokuConstants.GRID_SIZE][SudokuConstants.GRID_SIZE];
+  public static Cell[][] cells = new Cell[SudokuConstants.GRID_SIZE][SudokuConstants.GRID_SIZE];
   /** It also contains a Puzzle with array numbers and isGiven */
-  private Puzzle puzzle = new Puzzle();
+  public Puzzle puzzle = new Puzzle();
 
   /** Constructor */
   public GameBoardPanel() {
     super.setLayout(
-      new GridLayout(SudokuConstants.GRID_SIZE, SudokuConstants.GRID_SIZE)
-    ); // JPanel
+        new GridLayout(SudokuConstants.GRID_SIZE, SudokuConstants.GRID_SIZE)); // JPanel
+
+    setOpaque(false);
 
     // Allocate the 2D array of Cell, and added into JPanel.
     for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
@@ -33,37 +35,51 @@ public class GameBoardPanel extends JPanel {
         super.add(cells[row][col]); // JPanel
       }
     }
+
     puzzle.newPuzzle();
-    // [TODO 3] Allocate a common listener as the ActionEvent listener for all the Cells (JTextFields)
-    CellInputListener cellInputListener = new CellInputListener();
-    // [TODO 4] Adds this common listener to all editable cells
-    for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
-      for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
-        if (puzzle.isGiven[row][col]==false) { // Assuming 'isGiven' flags if the cell is editable
-          cells[row][col].addActionListener(cellInputListener);
-          // System.out.printf("%d %d %B%n",row,col,puzzle.checkIsGiven(row, col));
-        }
-      }
-    }
 
     super.setPreferredSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
+    // super.setSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
   }
 
-  /**
-   * Generate a new puzzle; and reset the game board of cells based on the puzzle.
-   * You can call this method to start a new game.
-   */
   public void newGame() {
-    // Generate a new puzzle
+
+    for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
+      for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
+        super.remove(cells[row][col]);
+        cells[row][col] = new Cell(row, col);
+        super.add(cells[row][col]);
+      }
+    }
+    super.setPreferredSize(new Dimension(BOARD_WIDTH, BOARD_HEIGHT));
     puzzle.newPuzzle();
+    mistake = 0;
+    cellLeft = SudokuGenerator.numFalse;
+    header.hintUsed = 0;
+    header.labelMistake.setText("Mistakes: " + mistake);
+    header.labelCellLeft.setText("Cells Left: " + cellLeft);
+    header.labelHintUsed.setText("Hints Used: " + header.hintUsed);
+
+    StopwatchGUI.seconds = 0;
+    StopwatchGUI.timer.start();
+    // Generate a new puzzle
+
+    CellInputListener cellInputListener = new CellInputListener();
 
     // Initialize all the 9x9 cells, based on the puzzle.
     for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
       for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
         cells[row][col].newGame(
-            puzzle.numbers[row][col],
-            puzzle.isGiven[row][col]
-          );
+            Puzzle.numbers[row][col],
+            Puzzle.isGiven[row][col]);
+        cells[row][col].paintDefault(row, col);
+      }
+    }
+    for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
+      for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
+        if (!Puzzle.isGiven[row][col]) {
+          cells[row][col].addKeyListener(cellInputListener);
+        }
       }
     }
   }
@@ -75,10 +91,8 @@ public class GameBoardPanel extends JPanel {
   public boolean isSolved() {
     for (int row = 0; row < SudokuConstants.GRID_SIZE; ++row) {
       for (int col = 0; col < SudokuConstants.GRID_SIZE; ++col) {
-        if (
-          cells[row][col].status == CellStatus.TO_GUESS ||
-          cells[row][col].status == CellStatus.WRONG_GUESS
-        ) {
+        if (cells[row][col].status == CellStatus.TO_GUESS ||
+            cells[row][col].status == CellStatus.WRONG_GUESS) {
           return false;
         }
       }
@@ -86,58 +100,98 @@ public class GameBoardPanel extends JPanel {
     return true;
   }
 
-  // [TODO 2] Define a Listener Inner Class for all the editable Cells
-  private class CellInputListener implements ActionListener {
+  public class CellInputListener implements KeyListener {
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-      // Get a reference of the JTextField that triggers this action event
-      Cell sourceCell = (Cell) e.getSource();
-      String checkInside = sourceCell.getText();
+    public void keyTyped(KeyEvent e) {
+      JTextField sourceCell = (JTextField) e.getSource();
+      Cell cell = (Cell) sourceCell; // Correct casting from JTextField to Cell
 
-      if(checkInside.length()!=1) {
-        JOptionPane.showMessageDialog(null,"Input is Invalid","Invalid Input",JOptionPane.PLAIN_MESSAGE);
-        return;
+      // Check if the cell's status is not CORRECT_GUESS
+      if (cell.status != CellStatus.CORRECT_GUESS) {
+        char c = e.getKeyChar(); // Get the character typed
+
+        // Check if the character is between '0' and '9' (including '0')
+        if (c >= '1' && c <= '9') {
+          // Set the text to this character if it's valid, replacing any existing content
+          sourceCell.setText(String.valueOf(c));
+          e.consume(); // Prevent further processing to avoid duplication
+        } else {
+          // Ignore the character if it's not a number between '0' and '9'
+          e.consume();
+        }
+      } else {
+        // Consume the key event to prevent the character from being inserted into the
+        // cell
+        e.consume();
       }
-      else if(checkInside.length()==1) {
-        if(checkInside.charAt(0)>'9'||checkInside.charAt(0)<'0') {
-          JOptionPane.showMessageDialog(null,"Input is Invalid","Invalid Input",JOptionPane.PLAIN_MESSAGE);
-          return;
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+      JTextField sourceTextField = (JTextField) e.getSource();
+      String text = sourceTextField.getText();
+
+      if (text.matches("[1-9]")) { // Verify if the content is exactly one digit
+        int numberIn = Integer.parseInt(text);
+        // System.out.println("You entered " + numberIn); // For debugging
+
+        // Correct casting from JTextField to Cell, assuming the source really is a
+        // Cell.
+        // This will throw a ClassCastException if the source is not a Cell.
+        Cell cell = (Cell) sourceTextField;
+        if (numberIn == cell.number) {
+          if (cell.status != CellStatus.CORRECT_GUESS) {
+            --cellLeft;
+          }
+          cell.setEditable(false);
+          cell.status = CellStatus.CORRECT_GUESS;
+        } else {
+          cell.status = CellStatus.WRONG_GUESS;
+        }
+        cell.paint(); // Update the visual representation based on status
+
+        if (isSolved()) {
+          StopwatchGUI.timer.stop();
+          JOptionPane.showMessageDialog(
+              null,
+              "Congratulations!",
+              "Puzzle Solved",
+              JOptionPane.PLAIN_MESSAGE);
         }
       }
+    }
 
-      // Retrieve the int entered
-      int numberIn = Integer.parseInt(sourceCell.getText());
-      // For debugging
-      System.out.println("You entered " + numberIn);
-      /*
-       * [TODO 5] (later - after TODO 3 and 4)
-       * Check the numberIn against sourceCell.number.
-       * Update the cell status sourceCell.status,
-       * and re-paint the cell via sourceCell.paint().
-       */
-      if (numberIn == sourceCell.number) {
-        if(sourceCell.status!=CellStatus.CORRECT_GUESS)
-          cellLeft--;
-        sourceCell.status = CellStatus.CORRECT_GUESS;
-      } else {
-        sourceCell.status = CellStatus.WRONG_GUESS;
-        mistake++;
-        System.out.println(mistake); //for debugging
-      }
-      System.out.printf("cellLeft=%d mistake=%d\n",cellLeft,mistake); //for debugging
-      sourceCell.paint();   // re-paint this cell based on its status
-      /*
-       * [TODO 6] (later)
-       * Check if the player has solved the puzzle after this move,
-       *   by calling isSolved(). Put up a congratulation JOptionPane, if so.
-       */
-      if(mistake==10) {
-        JOptionPane.showMessageDialog(null,"You did 10 mistake! You Lost!","Title",JOptionPane.PLAIN_MESSAGE);
-        System.exit(0);
-      }
-      if(isSolved()==true) {
-         JOptionPane.showMessageDialog(null,"Congratulations!","Title",JOptionPane.PLAIN_MESSAGE);
+    @Override
+    public void keyReleased(KeyEvent e) {
+      JTextField sourceCell = (JTextField) e.getSource();
+      String text = sourceCell.getText().trim();
+      if (text.matches("[1-9]")) {
+        int numberInput = Integer.parseInt(text);
+        System.out.println("You entered " + numberInput);
+        Cell cell = (Cell) sourceCell; // Assuming the source is indeed a Cell
+        if (numberInput == cell.number) {
+          if (cell.status != CellStatus.CORRECT_GUESS) {
+            --cellLeft;
+          }
+          cell.setEditable(false);
+          cell.status = CellStatus.CORRECT_GUESS;
+        } else {
+          ++mistake;
+          cell.status = CellStatus.WRONG_GUESS;
+        }
+        cell.paint(); // Update the visual representation based on status
+        header.labelMistake.setText("Mistakes: " + mistake);
+        header.labelCellLeft.setText("Cells left: " + cellLeft);
+        System.out.printf("mistake=%d cellLeft=%d%n", mistake, cellLeft);
+        if (isSolved()) {
+          StopwatchGUI.timer.stop();
+          JOptionPane.showMessageDialog(
+              null,
+              "Congratulations!",
+              "Puzzle Solved",
+              JOptionPane.PLAIN_MESSAGE);
+        }
       }
     }
   }

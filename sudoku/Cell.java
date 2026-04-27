@@ -3,9 +3,11 @@ import java.awt.Font;
 import javax.swing.BorderFactory;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 
 /**
- * The Cell class model the cells of the Sudoku puzzle, by customizing (subclass)
+ * The Cell class model the cells of the Sudoku puzzle, by customizing
+ * (subclass)
  * the javax.swing.JTextField to include row/column, puzzle number and status.
  */
 public class Cell extends JTextField {
@@ -13,7 +15,7 @@ public class Cell extends JTextField {
   private static final long serialVersionUID = 1L; // to prevent serial warning
 
   // Define named constants for JTextField's colors and fonts
-  //  to be chosen based on CellStatus
+  // to be chosen based on CellStatus
   public static final Color BG_GIVEN = Color.WHITE;
   public static final Color FG_GIVEN = Color.BLACK;
   public static final Color FG_NOT_GIVEN = Color.GRAY;
@@ -39,7 +41,6 @@ public class Cell extends JTextField {
     // Inherited from JTextField: Beautify all the cells once for all
     super.setHorizontalAlignment(JTextField.CENTER);
     super.setFont(FONT_NUMBERS);
-    
 
     // Set the background color of all cells to white (hex code #ffffff)
     super.setBackground(Color.WHITE);
@@ -80,12 +81,11 @@ public class Cell extends JTextField {
 
     // Create the border with the calculated thicknesses
     Border border = BorderFactory.createMatteBorder(
-      top,
-      left,
-      bottom,
-      right,
-      Color.BLACK
-    );
+        top,
+        left,
+        bottom,
+        right,
+        Color.BLACK);
 
     // Set the background color of all cells to white (hex code #ffffff)
     super.setBackground(Color.WHITE);
@@ -115,6 +115,7 @@ public class Cell extends JTextField {
       super.setBackground(Color.WHITE); // Change the background color to white (hex code #ffffff)
       super.setForeground(FG_NOT_GIVEN);
     } else if (status == CellStatus.CORRECT_GUESS) { // from TO_GUESS
+      super.setText(number + "");
       super.setBackground(BG_CORRECT_GUESS);
       super.setEditable(false);
     } else if (status == CellStatus.WRONG_GUESS) { // from TO_GUESS
@@ -122,7 +123,54 @@ public class Cell extends JTextField {
     }
   }
 
-  public void setStatus(CellStatus wrongGuess) {}
+  public void paintDefault(int row, int col) {
+    int top = 1;
+    int left = 1;
+    int bottom = 1;
+    int right = 1;
+
+    // Add thicker border for the outer edges and the 3x3 region borders
+    if (row == 0) { // Top edge
+      top += 2;
+    }
+    if (col == 0) { // Left edge
+      left += 2;
+    }
+    if (row == SudokuConstants.GRID_SIZE - 1) { // Bottom edge
+      bottom += 2;
+    }
+    if (col == SudokuConstants.GRID_SIZE - 1) { // Right edge
+      right += 2;
+    }
+
+    // Add thicker border to separate the 3x3 regions
+    if (row % 3 == 0 && row != 0) { // Top edge of a 3x3 block
+      top += 1;
+    }
+    if (col % 3 == 0 && col != 0) { // Left edge of a 3x3 block
+      left += 1;
+    }
+    if ((row + 1) % 3 == 0 && row != SudokuConstants.GRID_SIZE - 1) { // Bottom edge of a 3x3 block
+      bottom += 1;
+    }
+    if ((col + 1) % 3 == 0 && col != SudokuConstants.GRID_SIZE - 1) { // Right edge of a 3x3 block
+      right += 1;
+    }
+    Border border = BorderFactory.createMatteBorder(
+        top,
+        left,
+        bottom,
+        right,
+        Color.black);
+    super.setBorder(border);
+  }
+
+  public void paintHelp(int row, int col) {
+    super.setBorder(new LineBorder(Color.pink, 6));
+  }
+
+  public void setStatus(CellStatus wrongGuess) {
+  }
 
   public Object getRow() {
     return null;
